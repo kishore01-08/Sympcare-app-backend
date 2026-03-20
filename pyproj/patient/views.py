@@ -389,7 +389,6 @@ from django.http import HttpResponse
 from .models import MedicalReport
 from .utils import analyze_file
 
-
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -409,14 +408,18 @@ def run_analysis(request, report_id):
     report.analysis = json.dumps(result_data)
     report.save()
 
-    log_activity(report.patient, 'report_analysis', f"Analyzed Report: {report.file.name}", report.id)
+    log_activity(report.patient, 'report_analysis',
+                 f"Analyzed Report: {report.file.name}", report.id)
 
     return Response({
-        "status": "success",
-        "report_id": report.id,
-        "report": result_data.get("report", ""),
-    })
-
+    "status": "success",
+    "report": result_data.get("report"),
+    "triage": result_data.get("triage"),
+    "severity_score": result_data.get("severity_score"),
+    "file_url": request.build_absolute_uri(report.file.url),
+    "uploaded_at": report.uploaded_at,
+    "report_id": report.id
+})
 
 
 #--forgot password--

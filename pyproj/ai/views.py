@@ -5,10 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 from ai_engine.vector_builder import predict
-from ai_engine.question_engine import generate_questions
-from ai_engine.symptoms import SYMPTOMS
+from ai_engine.question_engine import ChatEngine
 from ai_engine.analysis import calculate_severity, determine_triage
-
+from ai_engine.symptoms import SYMPTOMS
 from chat.models import ChatHistory
 from patient.models import PatientUser, MedicalReport
 from .models import SymptomSession
@@ -67,14 +66,79 @@ def get_questions(request):
             return Response({"error": "No symptoms selected"}, status=400)
         symptoms = session.symptoms
 
-    questions = generate_questions(symptoms)
+    # ✅ FIX: create engine
+    engine = ChatEngine(symptoms)
 
+    # ✅ FIX: return only JSON-safe data
     return Response({
-        "questions": questions
+        "questions": [q["question"] for q in engine.questions]
     })
 
+@api_view(['POST'])
+def start_chat(request):
+    symptoms = request.data.get("symptoms", [])
 
+    engine = ChatEngine(symptoms)
 
+    request.session["chat_engine"] = {
+        "symptoms": symptoms,
+        "index": 0,
+        "answers": {},
+        "questions": engine.questions
+    }
+
+    first_q = engine.get_current_question()
+
+    return Response({
+        "question": first_q["question"]
+    })
+@api_view(['POST'])
+def answer_question(request):
+
+    session_data = request.session.get("chat_engine")
+
+    if not session_data:
+        return Response({"error": "Session expired"}, status=400)
+
+    symptoms = session_data["symptoms"]
+    index = session_data["index"]
+    answers = session_data["answers"]
+
+    engine = ChatEngine(symptoms)
+    if "questions" in session_data:
+        engine.questions = session_data["questions"]
+    engine.current_index = index
+    engine.answers = answers
+
+    user_answer = request.data.get("answer")
+
+    result = engine.process_answer(user_answer)
+
+    # ❌ Invalid answer → repeat
+    if result["status"] == "repeat":
+        return Response({
+            "status": "repeat",
+            "message": result["message"],
+            "question": result["question"]
+        })
+
+    # ✅ Next question
+    if result["status"] == "next":
+        session_data["index"] = engine.current_index
+        session_data["answers"] = engine.answers
+        request.session["chat_engine"] = session_data
+
+        return Response({
+            "status": "next",
+            "question": result["question"]
+        })
+
+    # ✅ Completed
+    if result["status"] == "complete":
+        return Response({
+            "status": "complete",
+            "answers": result["answers"]
+        })
 # ---------------- FINAL ANALYSIS ----------------
 @api_view(['POST'])
 def analyze(request):
@@ -113,12 +177,10 @@ def analyze(request):
             })
 
         main_disease = possible_diseases[0]["name"]
-
-        # ---- TRIAGE CALCULATION ----
+#triage calculation based on severity score
         severity_score = calculate_severity(answers)
         triage = determine_triage(severity_score)
 
-        # ---- SAVE CHAT HISTORY ----
         ChatHistory.objects.create(
             user=user.full_name,
             symptoms=symptoms,

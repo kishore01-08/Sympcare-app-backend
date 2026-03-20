@@ -14,13 +14,6 @@ import os
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-GEM_API_KEY = os.getenv("GEM_API_KEY")
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -74,7 +67,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True # For development only
+CORS_ALLOW_ALL_ORIGINS = False # For development only
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 ROOT_URLCONF = 'pyproj.urls'
 
@@ -147,7 +145,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sympcareai@gmail.com'
-EMAIL_HOST_PASSWORD = 'vzagevxmhvhfvzjr'
+EMAIL_HOST_PASSWORD = 'jqwhebffzwntrhfu'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -156,5 +154,3 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-

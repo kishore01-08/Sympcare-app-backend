@@ -48,3 +48,26 @@ def determine_triage(severity_score):
         return 2   # MEDIUM
     else:
         return 3   # LOW
+def validate_answer(answer, q_type):
+    import re
+
+    answer = answer.lower()
+
+    if q_type == "scale":
+        val = safe_float(answer, None)
+        return val is not None and 1 <= val <= 10
+
+    elif q_type == "duration":
+    # Accept if number exists (with or without units)
+        return bool(re.search(r"\d+", answer))
+
+    elif q_type == "yes_no":
+        return any(word in answer for word in ["yes", "no"])
+
+    elif q_type == "choice":
+        return len(answer.strip()) > 2
+
+    elif q_type == "text":
+        return len(answer.strip()) > 2
+
+    return False

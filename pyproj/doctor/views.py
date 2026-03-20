@@ -490,7 +490,6 @@ def dashboard_stats(request):
 
 
 from .models import ChatSession
-from .services import chat_with_gemini
 from rest_framework import status
 
 
