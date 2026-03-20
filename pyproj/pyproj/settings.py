@@ -9,10 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
 
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -30,8 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
 
+SECRET_KEY="django-insecure-m#=hl+4tc()s#1g!xp73)xdsb_)lryx83j&@locc-sjim!sm31"
+DEBUG=True
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
