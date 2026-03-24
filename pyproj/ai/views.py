@@ -203,3 +203,4 @@ def analyze(request):
             "error": "An unexpected error occurred during analysis. Please try again.",
             "details": str(e)
         }, status=500)
+    
